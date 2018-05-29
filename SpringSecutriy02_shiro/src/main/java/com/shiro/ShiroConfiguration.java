@@ -1,4 +1,6 @@
-package com;
+package com.shiro;
+
+import java.util.LinkedHashMap;
 
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.mgt.SecurityManager;
@@ -10,8 +12,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.LinkedHashMap;
-
 @Configuration
 public class ShiroConfiguration {
 
@@ -19,18 +19,29 @@ public class ShiroConfiguration {
     public ShiroFilterFactoryBean shiroFilter(@Qualifier("securityManager") SecurityManager manager) {
         ShiroFilterFactoryBean bean = new ShiroFilterFactoryBean();
         bean.setSecurityManager(manager);
-
+        // 设定登录页面
         bean.setLoginUrl("/login");
+        // 登录成功页面
         bean.setSuccessUrl("/index");
+        // 无权限页面
         bean.setUnauthorizedUrl("/unauthorized");
-
+        /*
+         * 该Map 的Key为URL的正则  Value为对应的拦截
+         * 
+         * DefaultFilter可以查看authc  anon等定义
+         */
         LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
+        // 表单拦截验证
         filterChainDefinitionMap.put("/index", "authc");
+        // 匿名拦截验证
         filterChainDefinitionMap.put("/login", "anon");
         filterChainDefinitionMap.put("/loginUser", "anon");
+        // 角色拦截验证
         filterChainDefinitionMap.put("/admin", "roles[admin]");
+        // 权限拦截验证
         filterChainDefinitionMap.put("/edit", "perms[edit]");
         filterChainDefinitionMap.put("/druid/**", "anon");
+        // 用户拦截验证
         filterChainDefinitionMap.put("/**", "user");
         bean.setFilterChainDefinitionMap(filterChainDefinitionMap);
 

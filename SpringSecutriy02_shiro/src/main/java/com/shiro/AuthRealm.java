@@ -1,4 +1,4 @@
-package com;
+package com.shiro;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +21,12 @@ import com.model.Role;
 import com.model.User;
 import com.service.UserService;
 
+/**
+ * 
+ * 权限校验类
+ * @author Administrator
+ *
+ */
 public class AuthRealm extends AuthorizingRealm {
 
     @Autowired
