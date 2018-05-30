@@ -15,6 +15,7 @@
 		<spring.boot.cxf.version>3.1.12</spring.boot.cxf.version>
 		<shiro.version>1.4.0</shiro.version>
 		<druid.version>1.1.6</druid.version>
+		<jackson.version>1.9.13</jackson.version>
 	</properties>
 	<!-- 当不存在自定义的父Maven工程,推荐使用此配置 -->
 	<parent>
@@ -47,5 +48,6 @@
 	<modules>
 		<module>SpringSecurity01_Sample</module>
 		<module>SpringSecutriy02_shiro</module>
+		<module>SpringSecutriy03_Permission</module>
 	</modules>
 </project>
