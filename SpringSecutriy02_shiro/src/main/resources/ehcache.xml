@@ -1,0 +1,27 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="ehcache.xsd">
+	<!-- 
+    maxElementsInMemory:缓存对象最大数量
+    maxElementsOnDisk:在磁盘上缓存的最大对象数量，默认值为0，表示不限制。 
+    eternal:设定缓存对象保存的永久属性，默认为 false; true时timeToIdleSeconds、timeToLiveSeconds失效。
+    timeToIdleSeconds:对象空闲时间，指对象在多长时间没有被访问就会失效。默认值0，表示一直可以访问
+    timeToLiveSeconds:对象存活时间，指对象从创建到失效所需要的时间。默认值0，表示一直可以访问。
+   	overflowToDisk:如果内存中数据超过内存限制，是否要缓存到磁盘上。 
+   	diskPersistent:是否在磁盘上持久化。指重启jvm后，数据是否有效。默认为false
+   	diskSpoolBufferSizeMB:DiskStore使用的磁盘大小，默认值30MB。每个cache使用各自的DiskStore
+   	memoryStoreEvictionPolicy:如果内存中数据超过内存限制，向磁盘缓存时的策略。默认值LRU，可选FIFO、LFU
+    	FIFO:先进先出
+    	LFU:最少被使用
+    	LRU:最近最少使用
+     -->
+    <diskStore path="java.io.tmpdir" />
+    
+    <cache name="passwordRetryCache"
+           maxEntriesLocalHeap="2000"
+           eternal="false"
+           timeToIdleSeconds="1800"
+           timeToLiveSeconds="0"
+           overflowToDisk="false"
+           statistics="true">
+    </cache>
+</ehcache>
