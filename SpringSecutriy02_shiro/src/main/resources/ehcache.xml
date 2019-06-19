@@ -14,8 +14,13 @@
     	LFU:最少被使用
     	LRU:最近最少使用
      -->
-    <diskStore path="java.io.tmpdir" />
-    
+     <defaultCache
+        maxElementsInMemory="10000"
+        eternal="false"
+        timeToIdleSeconds="120"
+        timeToLiveSeconds="120"
+        overflowToDisk="true"
+    />
     <cache name="passwordRetryCache"
            maxEntriesLocalHeap="2000"
            eternal="false"

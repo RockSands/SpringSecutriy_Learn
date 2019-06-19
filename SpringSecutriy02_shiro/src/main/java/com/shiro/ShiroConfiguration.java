@@ -10,12 +10,12 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import net.sf.ehcache.CacheManager;
-
 @Configuration
+@EnableCaching
 public class ShiroConfiguration {
 
 	@Bean("shiroFilter")
@@ -52,13 +52,21 @@ public class ShiroConfiguration {
 	}
 
 	@Bean("securityManager")
-	public SecurityManager securityManager(@Qualifier("authRealm") AuthRealm authRealm,EhCacheManager ehCacheManager) {
+	public SecurityManager securityManager(@Qualifier("authRealm") AuthRealm authRealm, EhCacheManager ehCacheManager) {
 		DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
 		manager.setRealm(authRealm);
 		// 使用缓存
 		// manager.setCacheManager(ehCacheManager);
 		return manager;
 	}
+
+	// @Bean("securityManager")
+	// public SecurityManager securityManager(@Qualifier("authRealm") AuthRealm
+	// authRealm) {
+	// DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
+	// manager.setRealm(authRealm);
+	// return manager;
+	// }
 
 	@Bean("authRealm")
 	public AuthRealm authRealm(@Qualifier("credentialMatcher") CredentialMatcher matcher) {
@@ -73,8 +81,13 @@ public class ShiroConfiguration {
 		return new CredentialMatcher(ehCacheManager);
 	}
 
+	// @Bean("credentialMatcher")
+	// public CredentialMatcher credentialMatcher() {
+	// return new CredentialMatcher();
+	// }
+
 	@Bean
-	public EhCacheManager ehCacheManager(CacheManager cacheManager) {
+	public EhCacheManager ehCacheManager(net.sf.ehcache.CacheManager cacheManager) {
 		EhCacheManager em = new EhCacheManager();
 		// 将ehcacheManager转换成shiro包装后的ehcacheManager对象
 		em.setCacheManager(cacheManager);
