@@ -21,6 +21,14 @@
         timeToLiveSeconds="120"
         overflowToDisk="true"
     />
+    <cache name="sessionIdCache"
+           maxEntriesLocalHeap="2000"
+           eternal="false"
+           timeToIdleSeconds="1800"
+           timeToLiveSeconds="0"
+           overflowToDisk="false"
+           statistics="true">
+    </cache>
     <cache name="passwordRetryCache"
            maxEntriesLocalHeap="2000"
            eternal="false"
