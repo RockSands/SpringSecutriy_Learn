@@ -10,9 +10,14 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.alibaba.druid.support.http.StatViewServlet;
+import com.alibaba.druid.support.http.WebStatFilter;
 
 @Configuration
 @EnableCaching
@@ -39,9 +44,9 @@ public class ShiroConfiguration {
 		// 匿名拦截验证
 		filterChainDefinitionMap.put("/login", "anon");
 		filterChainDefinitionMap.put("/loginUser", "anon");
-		// 角色拦截验证
+		// 角色拦截验证,要求roles必须是admin
 		filterChainDefinitionMap.put("/admin", "roles[admin]");
-		// 权限拦截验证
+		// 权限拦截验证,要求perms必须是edit
 		filterChainDefinitionMap.put("/edit", "perms[edit]");
 		filterChainDefinitionMap.put("/druid/**", "anon");
 		// 用户拦截验证

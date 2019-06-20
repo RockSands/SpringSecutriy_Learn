@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -24,45 +25,52 @@ import com.service.UserService;
 /**
  * 
  * 权限校验类
+ * 
  * @author Administrator
  *
  */
 public class AuthRealm extends AuthorizingRealm {
 
-    @Autowired
-    private UserService userService;
+	@Autowired
+	private UserService userService;
 
-    // 授权
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-    	// 从session获取对象
-        User user = (User) principals.fromRealm(this.getClass().getName()).iterator().next();
-        List<String> permissionList = new ArrayList<>();
-        List<String> roleNameList = new ArrayList<>();
-        Set<Role> roleSet = user.getRoles();
-        if (CollectionUtils.isNotEmpty(roleSet)) {
-            for(Role role : roleSet) {
-                roleNameList.add(role.getRname());
-                Set<Permission> permissionSet = role.getPermissions();
-                if (CollectionUtils.isNotEmpty(permissionSet)) {
-                    for (Permission permission : permissionSet) {
-                        permissionList.add(permission.getName());
-                    }
-                }
-            }
-        }
-        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
-        info.addStringPermissions(permissionList);
-        info.addRoles(roleNameList);
-        return info;
-    }
+	// 授权,获取用户的所有角色、权限
+	@Override
+	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+		// 从session获取对象
+		System.out.println("=doGetAuthorizationInfo=>");
+		User user = (User) principals.fromRealm(this.getClass().getName()).iterator().next();
+		List<String> permissionList = new ArrayList<>();
+		List<String> roleNameList = new ArrayList<>();
+		Set<Role> roleSet = user.getRoles();
+		if (CollectionUtils.isNotEmpty(roleSet)) {
+			for (Role role : roleSet) {
+				roleNameList.add(role.getRname());
+				Set<Permission> permissionSet = role.getPermissions();
+				if (CollectionUtils.isNotEmpty(permissionSet)) {
+					for (Permission permission : permissionSet) {
+						permissionList.add(permission.getName());
+					}
+				}
+			}
+		}
+		SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+		info.addStringPermissions(permissionList);
+		info.addRoles(roleNameList);
+		return info;
+	}
 
-    // 认证登录
-    @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-        UsernamePasswordToken usernamePasswordToken = (UsernamePasswordToken) token;
-        String username = usernamePasswordToken.getUsername();
-        User user = userService.findByUsername(username);
-        return new SimpleAuthenticationInfo(user, user.getPassword(), this.getClass().getName());
-    }
+	// 认证登录，判断用户的登陆情况
+	@Override
+	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
+		System.out.println("=doGetAuthenticationInfo=>");
+		UsernamePasswordToken usernamePasswordToken = (UsernamePasswordToken) token;
+		String username = usernamePasswordToken.getUsername();
+
+		if (StringUtils.isEmpty(username)) {
+			return new SimpleAuthenticationInfo();
+		}
+		User user = userService.findByUsername(username);
+		return new SimpleAuthenticationInfo(user, user.getPassword(), this.getClass().getName());
+	}
 }
