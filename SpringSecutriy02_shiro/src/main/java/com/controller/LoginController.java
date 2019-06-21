@@ -43,7 +43,7 @@ public class LoginController {
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/login", method = RequestMethod.GET)
+	@RequestMapping(value = "/login", method = { RequestMethod.GET, RequestMethod.POST })
 	public String login(Model model) {
 		Subject subject = SecurityUtils.getSubject();
 		User user = (User) subject.getPrincipal();
@@ -57,7 +57,9 @@ public class LoginController {
 	@RequestMapping("/loginUser")
 	public String loginUser(@RequestParam("username") String username, @RequestParam("password") String password,
 			boolean rememberMe, Model model, HttpSession session) {
-		UsernamePasswordToken token = new UsernamePasswordToken(username, password);
+		// UsernamePasswordToken token = new UsernamePasswordToken(username,
+		// password);
+		UsernamePasswordToken token = new UsernamePasswordToken(username, password, rememberMe);
 		Subject subject = SecurityUtils.getSubject();
 		try {
 			subject.login(token);
@@ -108,7 +110,7 @@ public class LoginController {
 	public String unauthorized(HttpSession session, Model model) {
 		return "unauthorized";
 	}
-	
+
 	@RequestMapping("/admin")
 	@ResponseBody
 	public String admin() {

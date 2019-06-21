@@ -1,9 +1,15 @@
 package com.model;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class User {
+/**
+ * Cookie 需要User序列化
+ * @author Administrator
+ *
+ */
+public class User implements Serializable{
 
 	private Integer uid;
 	private String username;

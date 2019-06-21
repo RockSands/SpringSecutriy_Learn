@@ -3,7 +3,6 @@ package com.shiro;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
-import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.mgt.RememberMeManager;
@@ -17,6 +16,7 @@ import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,8 +40,8 @@ import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
 public class ShiroConfiguration {
 
 	/**
-	 * 解决： 无权限页面不跳转 shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized") 无效
-	 * shiro的源代码ShiroFilterFactoryBean.Java定义的filter必须满足filter instanceof
+	 * 解决： 无权限页面不跳转 shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized")
+	 * 无效 shiro的源代码ShiroFilterFactoryBean.Java定义的filter必须满足filter instanceof
 	 * AuthorizationFilter，
 	 * 只有perms，roles，ssl，rest，port才是属于AuthorizationFilter，而anon，authcBasic，auchc，user是AuthenticationFilter，
 	 * 所以unauthorizedUrl设置后页面不跳转 Shiro注解模式下，登录失败与没有权限都是通过抛出异常。
@@ -101,7 +101,7 @@ public class ShiroConfiguration {
 		// 角色拦截验证,要求roles必须是admin
 		filterChainDefinitionMap.put("/admin", "roles[admin]");
 		// 权限拦截验证,要求perms必须是edit
-		filterChainDefinitionMap.put("/edit", "perms[edit]");
+		filterChainDefinitionMap.put("/view", "perms[view]");
 		filterChainDefinitionMap.put("/druid/**", "anon");
 		// 用户拦截验证
 		filterChainDefinitionMap.put("/**", "user");
@@ -127,8 +127,8 @@ public class ShiroConfiguration {
 		// 激活Cookie
 		manager.setRememberMeManager(rememberMeManager);
 
-		// 配置ehcache缓存管理器 参考博客：
-		// securityManager.setCacheManager(getEhCacheManager());
+		// 配置ehcache缓存管理器 , 此处增加缓存为核心,表示shiro全面使用缓存
+		manager.setCacheManager(ehCacheManager);
 
 		// 配置自定义session管理，使用redis 参考博客：
 		// securityManager.setSessionManager(sessionManager());
@@ -147,11 +147,26 @@ public class ShiroConfiguration {
 
 	@Bean("authRealm")
 	public ShiroRealm authRealm(@Qualifier("credentialMatcher") CredentialMatcher matcher) {
-		ShiroRealm authRealm = new ShiroRealm();
+		// ShiroRealm authRealm = new ShiroRealm();
 		// 内存缓存
-		authRealm.setCacheManager(new MemoryConstrainedCacheManager());
-		authRealm.setCredentialsMatcher(matcher);
-		return authRealm;
+		// authRealm.setCacheManager(new MemoryConstrainedCacheManager());
+		// authRealm.setCredentialsMatcher(matcher);
+		ShiroRealm shiroRealm = new ShiroRealm();
+		shiroRealm.setCredentialsMatcher(matcher);
+		/*
+		 * 在SecurityManager 启动缓存时, shiroRealm默认开启缓存
+		 * 这里主要是指定缓存空间
+		 */
+		shiroRealm.setCachingEnabled(true);
+		// 启用身份验证缓存，即缓存AuthenticationInfo信息
+		shiroRealm.setAuthenticationCachingEnabled(true);
+		// 缓存AuthenticationInfo信息的缓存名称 在ehcache-shiro.xml中有对应缓存的配置
+		shiroRealm.setAuthenticationCacheName("authenticationCache");
+		// 启用授权缓存，即缓存AuthorizationInfo信息
+		shiroRealm.setAuthorizationCachingEnabled(true);
+		// 缓存AuthorizationInfo信息的缓存名称 在ehcache-shiro.xml中有对应缓存的配置
+		shiroRealm.setAuthorizationCacheName("authorizationCache");
+		return shiroRealm;
 	}
 
 	@Bean("credentialMatcher")
@@ -218,7 +233,22 @@ public class ShiroConfiguration {
 	}
 
 	/**
-	 * 开启shiro 注解模式 可以在controller中的方法前加上注解 如 @RequiresPermissions("userInfo:add")
+	 * 定时清理缓存 让某个实例的某个方法的返回值注入为Bean的实例 Spring静态注入
+	 * 
+	 * @return
+	 */
+	@Bean
+	public MethodInvokingFactoryBean getMethodInvokingFactoryBean(
+			@Qualifier("securityManager") SecurityManager securityManager) {
+		MethodInvokingFactoryBean factoryBean = new MethodInvokingFactoryBean();
+		factoryBean.setStaticMethod("org.apache.shiro.SecurityUtils.setSecurityManager");
+		factoryBean.setArguments(new Object[] { securityManager });
+		return factoryBean;
+	}
+
+	/**
+	 * 开启shiro 注解模式 可以在controller中的方法前加上注解
+	 * 如 @RequiresPermissions("userInfo:add")
 	 * 
 	 * @param securityManager
 	 * @return
@@ -233,6 +263,7 @@ public class ShiroConfiguration {
 
 	/**
 	 * thymeleaf生效
+	 * 
 	 * @return
 	 */
 	@Bean(name = "shiroDialect")

@@ -16,6 +16,8 @@ import com.mapper.batch.SqlType;
 import com.model.Role;
 import com.model.User;
 import com.service.BatchExcuteService;
+import com.service.ShiroCacheService;
+import com.shiro.utils.ShiroUtils;
 
 @Controller
 @RequestMapping("userInfo")
@@ -26,6 +28,9 @@ public class UserController {
 	@Autowired
 	private UserMapper userMapper;
 
+	@Autowired
+	private ShiroCacheService shiroCacheService;
+
 	@RequestMapping(value = "/add", method = RequestMethod.GET)
 	@ResponseBody
 	public String add() {
@@ -34,6 +39,7 @@ public class UserController {
 		user.setName("陈魁武");
 		user.setId_card_num("177777777777777777");
 		user.setUsername("chenkuiwu");
+		user.setPassword("123456");
 		Role role = new Role();
 		role.setId(3);
 		user.getRoles().add(role);
@@ -68,5 +74,20 @@ public class UserController {
 	@ResponseBody
 	public String view(Model model) {
 		return "这是用户列表页";
+	}
+
+	/**
+	 * 删除admin用户 userInfo:del 权限
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/cleanUserCache", method = RequestMethod.GET)
+	@ResponseBody
+	public String cleanUserCache(Model model) {
+		 ShiroUtils.cleanAuthorizing("chenkuiwu");
+		shiroCacheService.removeUserAuthorization("chenkuiwu");
+		return "清理用户[chenkuiwu]权限成功";
+
 	}
 }

@@ -30,25 +30,25 @@ public class CredentialMatcher extends SimpleCredentialsMatcher {
 	@Override
 	public boolean doCredentialsMatch(AuthenticationToken token, AuthenticationInfo info) {
 		UsernamePasswordToken usernamePasswordToken = (UsernamePasswordToken) token;
+		if (usernamePasswordToken.getPassword() == null) {
+			return false;
+		}
 		String password = new String(usernamePasswordToken.getPassword());
 		String dbPassword = (String) info.getCredentials();
-		// AtomicInteger retryCount = userService.getCacheCounter(usernamePasswordToken.getUsername());
 		AtomicInteger retryCount = passwordRetryCache.get(usernamePasswordToken.getUsername());
-		System.out.println(usernamePasswordToken.getUsername() + "==retryCount==>" + retryCount);
+		if (retryCount == null) {
+			retryCount = new AtomicInteger(0);
+		}
 		// 自定义一个验证过程：当用户连续输入密码错误5次以上禁止用户登录一段时间
-		if (retryCount != null && retryCount.incrementAndGet() > 5) {
+		if (retryCount.incrementAndGet() > 5) {
 			throw new RuntimeException();// 抛出异常,禁止登陆,等待缓存自动清除
 		}
 		boolean isEqual = this.equals(password, dbPassword);
 		if (isEqual) {
-			// userService.cleanCacheCounter(usernamePasswordToken.getUsername());// 清除缓存
+			// 清除缓存
 			passwordRetryCache.remove(usernamePasswordToken.getUsername());
 		} else {
-			if(retryCount == null) {
-				retryCount = new AtomicInteger(0);
-			}
-			System.out.println(usernamePasswordToken.getUsername() + "--retryCount-->" + retryCount);
-			// userService.setCacheCounter(usernamePasswordToken.getUsername(), retryCount);
+			System.out.println("用户[" + usernamePasswordToken.getUsername() + "],你已经尝试了" + retryCount + "次登录!");
 			passwordRetryCache.put(usernamePasswordToken.getUsername(), retryCount);
 		}
 		return isEqual;
