@@ -30,10 +30,12 @@ public class UserController {
 	@ResponseBody
 	public String add() {
 		User user = new User();
+		user.setUid(255);
 		user.setName("陈魁武");
 		user.setId_card_num("177777777777777777");
 		user.setUsername("chenkuiwu");
 		Role role = new Role();
+		role.setId(3);
 		user.getRoles().add(role);
 		List<BatchVo> vos = new ArrayList<BatchVo>();
 		vos.add(new BatchVo(SqlType.INSERT, "com.mapper.UserMapper.insert", user));

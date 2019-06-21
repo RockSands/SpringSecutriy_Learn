@@ -61,7 +61,7 @@
 
 	<insert id="insertRoles" parameterType="com.model.User">
 		insert into user_role values
-		<foreach collection="user.roles"  item="role">
+		<foreach collection="roles"  item="role">
 			(#{uid},#{role.id})
 		</foreach>
 	</insert>

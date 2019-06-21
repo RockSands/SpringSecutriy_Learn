@@ -9,9 +9,9 @@ public interface UserMapper {
 
 	User findByUserName(@Param("username") String userName);
 
-	int insert(User user);
+	int insert(@Param("user")User user);
 
-	int insertRoles(User user);
+	int insertRoles(@Param("user")User user);
 
 	int del(@Param("uid") String uid);
 
