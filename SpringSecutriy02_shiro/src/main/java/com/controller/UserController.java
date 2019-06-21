@@ -3,7 +3,6 @@ package com.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,7 +34,7 @@ public class UserController {
 		user.setId_card_num("177777777777777777");
 		user.setUsername("chenkuiwu");
 		Role role = new Role();
-		user.setRoles(Sets.newLinkedHashSet(role));
+		user.getRoles().add(role);
 		List<BatchVo> vos = new ArrayList<BatchVo>();
 		vos.add(new BatchVo(SqlType.INSERT, "com.mapper.UserMapper.insert", user));
 		vos.add(new BatchVo(SqlType.INSERT, "com.mapper.UserMapper.insertRoles", user));

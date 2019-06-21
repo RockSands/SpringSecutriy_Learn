@@ -4,7 +4,7 @@
 
 	<!-- 查询用户权限信息 -->
 	<select id="findPermissionsByRoleId" resultType="com.model.Permission">
-		SELECT p.* from permission p LEFT JOIN sys_role_permission rp on p.id
+		SELECT p.* from permission p LEFT JOIN role_permission rp on p.id
 		= rp.permission_id WHERE rp.role_id IN
 		<foreach collection="roles" index="index" item="item" open="("
 			close=")" separator=",">

@@ -4,7 +4,7 @@
 
     <!-- 查询用户信息 -->
     <select id="findRolesByUserId" resultType="com.model.Role">
-        SELECT r.* from sys_role r LEFT JOIN sys_user_role ur on r.id = ur.role_id where ur.uid  = #{uid}
+        SELECT r.* from role r LEFT JOIN user_role ur on r.id = ur.role_id where ur.uid  = #{uid}
     </select>
 
 </mapper> 

@@ -5,7 +5,7 @@
 
 	<!-- 查询用户信息 -->
 	<select id="findByUserName" resultType="com.model.User">
-		SELECT * FROM user_info WHERE username = #{userName}
+		SELECT * FROM user_info WHERE username = #{username}
 	</select>
 
 	<!-- 添加用户 -->
@@ -61,8 +61,8 @@
 
 	<insert id="insertRoles" parameterType="com.model.User">
 		insert into user_role values
-		<foreach collection="roles" item="role" separator=",">
-			(#{uid},#{role.rid})
+		<foreach collection="user.roles"  item="role">
+			(#{uid},#{role.id})
 		</foreach>
 	</insert>
 
