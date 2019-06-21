@@ -1,11 +1,9 @@
 package com.shiro;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -17,10 +15,12 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.mapper.PermissionMapper;
+import com.mapper.RoleMapper;
+import com.mapper.UserMapper;
 import com.model.Permission;
 import com.model.Role;
 import com.model.User;
-import com.service.UserService;
 
 /**
  * 
@@ -32,7 +32,13 @@ import com.service.UserService;
 public class ShiroRealm extends AuthorizingRealm {
 
 	@Autowired
-	private UserService userService;
+	private UserMapper userMapper;
+
+	@Autowired
+	private PermissionMapper permissionMapper;
+
+	@Autowired
+	private RoleMapper roleMapper;
 
 	/**
 	 * 授权用户权限 授权的方法是在碰到<shiro:hasPermission name=''></shiro:hasPermission>标签的时候调用的
@@ -65,25 +71,25 @@ public class ShiroRealm extends AuthorizingRealm {
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
 		// 从session获取对象
 		System.out.println("=doGetAuthorizationInfo=>");
-		User user = (User) principals.fromRealm(this.getClass().getName()).iterator().next();
-		List<String> permissionList = new ArrayList<>();
-		List<String> roleNameList = new ArrayList<>();
-		Set<Role> roleSet = user.getRoles();
-		if (CollectionUtils.isNotEmpty(roleSet)) {
-			for (Role role : roleSet) {
-				roleNameList.add(role.getRname());
-				Set<Permission> permissionSet = role.getPermissions();
-				if (CollectionUtils.isNotEmpty(permissionSet)) {
-					for (Permission permission : permissionSet) {
-						permissionList.add(permission.getName());
-					}
-				}
-			}
+		// 获取用户
+		User user = (User) SecurityUtils.getSubject().getPrincipal();
+
+		// 获取用户角色
+		Set<Role> roles = this.roleMapper.findRolesByUserId(user.getUid());
+		// 添加角色
+		SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
+		for (Role role : roles) {
+			authorizationInfo.addRole(role.getRole());
 		}
-		SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
-		info.addStringPermissions(permissionList);
-		info.addRoles(roleNameList);
-		return info;
+
+		// 获取用户权限
+		Set<Permission> permissions = this.permissionMapper.findPermissionsByRoleId(roles);
+		// 添加权限
+		for (Permission permission : permissions) {
+			authorizationInfo.addStringPermission(permission.getPermission());
+		}
+
+		return authorizationInfo;
 	}
 
 	// 密码验证
@@ -100,7 +106,7 @@ public class ShiroRealm extends AuthorizingRealm {
 		if (StringUtils.isEmpty(username)) {
 			return new SimpleAuthenticationInfo();
 		}
-		User user = userService.findByUsername(username);
+		User user = userMapper.findByUserName(username);
 		return new SimpleAuthenticationInfo(user, user.getPassword(), this.getClass().getName());
 	}
 }

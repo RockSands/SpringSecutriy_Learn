@@ -5,43 +5,58 @@ import java.util.Set;
 
 public class Role {
 
-    private Integer rid;
+	private Integer id;
+	private String role;
+	private String description;
+	private String available;
+	private Set<User> users = new HashSet<>();
+	private Set<Permission> permissions = new HashSet<>();
 
-    private String rname;
+	public Integer getId() {
+		return id;
+	}
 
-    private Set<Permission> permissions = new HashSet<>();
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    private Set<User> users = new HashSet<>();
+	public String getRole() {
+		return role;
+	}
 
-    public Integer getRid() {
-        return rid;
-    }
+	public void setRole(String role) {
+		this.role = role;
+	}
 
-    public void setRid(Integer rid) {
-        this.rid = rid;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public String getRname() {
-        return rname;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public void setRname(String rname) {
-        this.rname = rname;
-    }
+	public String getAvailable() {
+		return available;
+	}
 
-    public Set<Permission> getPermissions() {
-        return permissions;
-    }
+	public void setAvailable(String available) {
+		this.available = available;
+	}
 
-    public void setPermissions(Set<Permission> permissions) {
-        this.permissions = permissions;
-    }
+	public Set<User> getUsers() {
+		return users;
+	}
 
-    public Set<User> getUsers() {
-        return users;
-    }
+	public void setUsers(Set<User> users) {
+		this.users = users;
+	}
 
-    public void setUsers(Set<User> users) {
-        this.users = users;
-    }
+	public Set<Permission> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(Set<Permission> permissions) {
+		this.permissions = permissions;
+	}
 }

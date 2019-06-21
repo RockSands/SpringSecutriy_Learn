@@ -3,28 +3,76 @@
 
 <mapper namespace="com.mapper.UserMapper">
 
-    <resultMap id="userMap" type="com.model.User">
-        <id property="uid" column="uid" />
-        <result property="username" column="username" />
-        <result property="password" column="password" />
-        <collection property="roles" ofType="com.model.Role">
-            <id property="rid" column="rid" />
-            <result property="rname" column="rname" />
-            <collection property="permissions" ofType="com.model.Permission">
-                <id property="pid" column="pid" />
-                <result property="name" column="name"/>
-                <result property="url" column="url" />
-            </collection>
-        </collection>
-    </resultMap>
+	<!-- 查询用户信息 -->
+	<select id="findByUserName" resultType="com.model.User">
+		SELECT * FROM user_info WHERE username = #{userName}
+	</select>
 
-    <select id="findByUsername" parameterType="string" resultMap="userMap">
-      SELECT u.*, r.*, p.*
-      FROM user u
-        INNER JOIN user_role ur on ur.uid = u.uid
-        INNER JOIN role r on r.rid = ur.rid
-        INNER JOIN permission_role pr on pr.rid = r.rid
-        INNER JOIN permission p on pr.pid = p.pid
-      WHERE u.username = #{username}
-    </select>
+	<!-- 添加用户 -->
+	<!-- 创建用户 -->
+	<insert id="insert" parameterType="com.model.User">
+		<selectKey resultType="java.lang.Integer" keyProperty="uid"
+			order="AFTER">
+			SELECT
+			LAST_INSERT_ID()
+		</selectKey>
+		insert into user_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="uid != null">
+				uid,
+			</if>
+			<if test="username != null and username != ''">
+				username,
+			</if>
+			<if test="password != null and password != ''">
+				password,
+			</if>
+			<if test="name != null and name != ''">
+				`name`,
+			</if>
+			<if test="id_card_num != null and id_card_num != ''">
+				id_card_num,
+			</if>
+			<if test="state != null and state != ''">
+				state,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="uid != null">
+				#{uid},
+			</if>
+			<if test="username != null and username != ''">
+				#{username},
+			</if>
+			<if test="password != null and password != ''">
+				#{password},
+			</if>
+			<if test="name != null and name != ''">
+				#{name},
+			</if>
+			<if test="id_card_num != null and id_card_num != ''">
+				#{id_card_num},
+			</if>
+			<if test="state != null and state != ''">
+				#{state},
+			</if>
+		</trim>
+	</insert>
+
+	<insert id="insertRoles" parameterType="com.model.User">
+		insert into user_role values
+		<foreach collection="roles" item="role" separator=",">
+			(#{uid},#{role.rid})
+		</foreach>
+	</insert>
+
+	<!-- 删除用户 -->
+	<delete id="del">
+		DELETE FROM user_info WHERE uid = #{uid}
+	</delete>
+	
+	<!-- 删除用户角色 -->
+	<delete id="delUserRole">
+		DELETE FROM user_role WHERE uid = #{uid}
+	</delete>
 </mapper>

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.model.User;
 
 @Controller
-public class TestController {
+public class LoginController {
 
 	/**
 	 * 访问项目根路径
@@ -48,9 +48,9 @@ public class TestController {
 		Subject subject = SecurityUtils.getSubject();
 		User user = (User) subject.getPrincipal();
 		if (user == null) {
-			return "login";
+			return "login";// 直接返回对应的模板
 		} else {
-			return "redirect:index";
+			return "redirect:index";// 使用模板,调整需要redirect
 		}
 	}
 
@@ -108,17 +108,11 @@ public class TestController {
 	public String unauthorized(HttpSession session, Model model) {
 		return "unauthorized";
 	}
-
+	
 	@RequestMapping("/admin")
 	@ResponseBody
 	public String admin() {
 		return "admin success";
-	}
-
-	@RequestMapping("/edit")
-	@ResponseBody
-	public String edit() {
-		return "edit success";
 	}
 
 	@RequestMapping("/test0")
