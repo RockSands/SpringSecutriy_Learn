@@ -7,6 +7,8 @@ import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.mgt.RememberMeManager;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator;
+import org.apache.shiro.session.mgt.eis.SessionIdGenerator;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
@@ -269,6 +271,25 @@ public class ShiroConfiguration {
 	@Bean(name = "shiroDialect")
 	public ShiroDialect shiroDialect() {
 		return new ShiroDialect();
+	}
+	
+	/**
+	 * 配置session监听
+	 * @return
+	 */
+	@Bean("sessionListener")
+	public ShiroSessionListener sessionListener(){
+	    ShiroSessionListener sessionListener = new ShiroSessionListener();
+	    return sessionListener;
+	}
+	
+	/**
+	 * 配置会话ID生成器
+	 * @return
+	 */
+	@Bean
+	public SessionIdGenerator sessionIdGenerator() {
+	    return new JavaUuidSessionIdGenerator();
 	}
 
 	@Bean
