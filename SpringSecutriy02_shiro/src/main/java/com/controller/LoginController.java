@@ -10,6 +10,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.authz.annotation.RequiresUser;
 import org.apache.shiro.subject.Subject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,9 +19,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.model.User;
+import com.shiro.RetryLimitHashedCredentialsMatcher;
 
 @Controller
 public class LoginController {
+	@Autowired
+	private RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher;
 
 	/**
 	 * 访问项目根路径
@@ -110,7 +114,19 @@ public class LoginController {
 	public String unauthorized(HttpSession session, Model model) {
 		return "unauthorized";
 	}
-
+	
+	/**
+	 * 解除admin 用户的限制登录 
+	 * 写死的 方便测试
+	 * @return
+	 */
+	@RequestMapping("/unlockAccount")
+	public String unlockAccount(Model model){
+	    model.addAttribute("msg","用户解锁成功");
+	    retryLimitHashedCredentialsMatcher.unlockAccount("admin");
+	    return "login";
+	}
+	
 	@RequestMapping("/admin")
 	@ResponseBody
 	public String admin() {

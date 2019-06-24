@@ -77,7 +77,7 @@ public class ShiroConfiguration {
 		// 必须设置 SecurityManager,Shiro的核心安全接口
 		shiroFilterFactoryBean.setSecurityManager(manager);
 		// 配置登陆接口路径，如果不设置默认会自动寻找Web工程根目录下的"/login.jsp"页面
-		shiroFilterFactoryBean.setLoginUrl("/login");
+		shiroFilterFactoryBean.setLoginUrl("/");
 		// 配置登陆成功接口路径,登录成功后要跳转的链接
 		shiroFilterFactoryBean.setSuccessUrl("/index");
 		// 配置未授权界面,用于不满足权限
@@ -155,7 +155,7 @@ public class ShiroConfiguration {
 	}
 
 	@Bean("authRealm")
-	public ShiroRealm authRealm(@Qualifier("credentialMatcher") CredentialMatcher matcher) {
+	public ShiroRealm authRealm(@Qualifier("credentialMatcher") RetryLimitHashedCredentialsMatcher matcher) {
 		// ShiroRealm authRealm = new ShiroRealm();
 		// 内存缓存
 		// authRealm.setCacheManager(new MemoryConstrainedCacheManager());
@@ -177,9 +177,38 @@ public class ShiroConfiguration {
 		return shiroRealm;
 	}
 
-	@Bean("credentialMatcher")
-	public CredentialMatcher credentialMatcher(EhCacheManager shiroEhCacheManager) {
-		return new CredentialMatcher(shiroEhCacheManager);
+	/**
+	 * 普通
+	 * 
+	 * @param shiroEhCacheManager
+	 * @return
+	 */
+	// @Bean("credentialMatcher")
+	// public CredentialMatcher credentialMatcher(EhCacheManager
+	// shiroEhCacheManager) {
+	// return new CredentialMatcher(shiroEhCacheManager);
+	// }
+
+	/**
+	 * 功能性
+	 * 
+	 * @param shiroEhCacheManager
+	 * @return
+	 */
+	@Bean("credentialsMatcher")
+	public RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher(EhCacheManager shiroEhCacheManager) {
+		RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher = new RetryLimitHashedCredentialsMatcher(
+				shiroEhCacheManager);
+
+		// 如果密码加密,可以打开下面配置
+		// 加密算法的名称
+		// retryLimitHashedCredentialsMatcher.setHashAlgorithmName("MD5");
+		// 配置加密的次数
+		// retryLimitHashedCredentialsMatcher.setHashIterations(1024);
+		// 是否存储为16进制
+		// retryLimitHashedCredentialsMatcher.setStoredCredentialsHexEncoded(true);
+
+		return retryLimitHashedCredentialsMatcher;
 	}
 
 	/**

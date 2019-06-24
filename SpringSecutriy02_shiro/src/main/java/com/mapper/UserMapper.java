@@ -10,6 +10,8 @@ public interface UserMapper {
 	User findByUserName(@Param("username") String userName);
 
 	int insert(@Param("user")User user);
+	
+	int update(@Param("user")User user);
 
 	int insertRoles(@Param("user")User user);
 
