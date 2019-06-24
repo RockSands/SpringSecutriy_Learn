@@ -36,8 +36,8 @@ import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
 public class ShiroConfiguration {
 	
 	@Autowired
-	@Qualifier("ehCacheManager")
-	private EhCacheManager ehCacheManager;
+	@Qualifier("shiroEhCacheManager")
+	private EhCacheManager shiroEhCacheManager;
 
 	@Autowired
 	@Qualifier("rememberMeManager")
@@ -135,7 +135,7 @@ public class ShiroConfiguration {
 		manager.setRememberMeManager(rememberMeManager);
 
 		// 配置ehcache缓存管理器 , 此处增加缓存为核心,表示shiro全面使用缓存
-		manager.setCacheManager(ehCacheManager);
+		manager.setCacheManager(shiroEhCacheManager);
 
 		// 配置自定义session管理
 		manager.setSessionManager(sessionManager);
@@ -177,7 +177,7 @@ public class ShiroConfiguration {
 
 	@Bean("credentialMatcher")
 	public CredentialMatcher credentialMatcher() {
-		return new CredentialMatcher(ehCacheManager);
+		return new CredentialMatcher(shiroEhCacheManager);
 	}
 
 	/**

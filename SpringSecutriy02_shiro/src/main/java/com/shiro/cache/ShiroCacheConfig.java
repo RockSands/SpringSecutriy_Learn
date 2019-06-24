@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableCaching
 public class ShiroCacheConfig {
 
-	@Bean("ehCacheManager")
+	@Bean("shiroEhCacheManager")
 	public EhCacheManager ehCacheManager(net.sf.ehcache.CacheManager cacheManager) {
 		EhCacheManager em = new EhCacheManager();
 		// 将ehcacheManager转换成shiro包装后的ehcacheManager对象
