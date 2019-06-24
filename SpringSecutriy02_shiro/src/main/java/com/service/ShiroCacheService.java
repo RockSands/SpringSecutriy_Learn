@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class ShiroCacheService {
 	@Autowired
-	@Qualifier("ehCacheManager")
-	private EhCacheManager ehCacheManager;
+	@Qualifier("shiroEhCacheManager")
+	private EhCacheManager shiroEhCacheManager;
 
 	public void removeUserAuthorization(String userName) {
-		Cache<SimplePrincipalCollection, Object> cache = ehCacheManager.getCache("authorizationCache");
+		Cache<SimplePrincipalCollection, Object> cache = shiroEhCacheManager.getCache("authorizationCache");
 		if (cache == null) {
 			return;
 		}

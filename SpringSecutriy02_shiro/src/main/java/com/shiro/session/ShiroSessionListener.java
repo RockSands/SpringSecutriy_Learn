@@ -4,7 +4,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.SessionListener;
-import org.springframework.stereotype.Component;
 
 /**
  * 
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
  * @author Administrator
  *
  */
-@Component("sessionListener")
 public class ShiroSessionListener implements SessionListener {
 	/**
 	 * 统计在线人数 juc包下线程安全自增

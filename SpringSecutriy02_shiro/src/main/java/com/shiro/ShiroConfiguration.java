@@ -3,6 +3,8 @@ package com.shiro;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
+import javax.servlet.Filter;
+
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.mgt.RememberMeManager;
 import org.apache.shiro.mgt.SecurityManager;
@@ -13,11 +15,16 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
+
+import com.shiro.cache.ShiroCacheConfig;
+import com.shiro.cookie.ShiroCookieConfig;
+import com.shiro.session.KickoutSessionControlFilter;
+import com.shiro.session.ShiroSessionConfig;
 
 import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
 
@@ -33,19 +40,8 @@ import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
  *
  */
 @Configuration
+@AutoConfigureAfter(value = { ShiroCacheConfig.class, ShiroSessionConfig.class, ShiroCookieConfig.class })
 public class ShiroConfiguration {
-	
-	@Autowired
-	@Qualifier("shiroEhCacheManager")
-	private EhCacheManager shiroEhCacheManager;
-
-	@Autowired
-	@Qualifier("rememberMeManager")
-	private RememberMeManager rememberMeManager;
-
-	@Autowired
-	@Qualifier("sessionManager")
-	private SessionManager sessionManager;
 
 	/**
 	 * 解决： 无权限页面不跳转 shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized")
@@ -75,49 +71,54 @@ public class ShiroConfiguration {
 	 * @return
 	 */
 	@Bean("shiroFilter")
-	public ShiroFilterFactoryBean shiroFilter(@Qualifier("securityManager") SecurityManager manager) {
-		ShiroFilterFactoryBean bean = new ShiroFilterFactoryBean();
+	public ShiroFilterFactoryBean shiroFilter(@Qualifier("securityManager") SecurityManager manager,
+			KickoutSessionControlFilter kickoutSessionControlFilter) {
+		ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
 		// 必须设置 SecurityManager,Shiro的核心安全接口
-		bean.setSecurityManager(manager);
+		shiroFilterFactoryBean.setSecurityManager(manager);
 		// 配置登陆接口路径，如果不设置默认会自动寻找Web工程根目录下的"/login.jsp"页面
-		bean.setLoginUrl("/login");
+		shiroFilterFactoryBean.setLoginUrl("/login");
 		// 配置登陆成功接口路径,登录成功后要跳转的链接
-		bean.setSuccessUrl("/index");
+		shiroFilterFactoryBean.setSuccessUrl("/index");
 		// 配置未授权界面,用于不满足权限
-		bean.setUnauthorizedUrl("/unauthorized");
+		shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized");
 
 		/*
 		 * 定义拦截器
 		 */
-		// // 自定义拦截器限制并发人数
-		// LinkedHashMap<String, Filter> filtersMap = new LinkedHashMap<>();
-		// // 限制同一帐号同时在线的个数
-		// filtersMap.put("kickout", kickoutSessionControlFilter());
-		// shiroFilterFactoryBean.setFilters(filtersMap);
+		// 自定义拦截器限制并发人数
+		LinkedHashMap<String, Filter> filtersMap = new LinkedHashMap<>();
+		// 限制同一帐号同时在线的个数
+		filtersMap.put("kickout", kickoutSessionControlFilter);
+		shiroFilterFactoryBean.setFilters(filtersMap);
 
 		/*
 		 * 该Map 的Key为URL的正则 Value为对应的拦截
 		 * 
 		 * anon 表示资源都可以匿名访问 authc 表示需要认证才能进行访问
 		 */
+		// 配置访问权限 必须是LinkedHashMap，因为它必须保证有序
+		// 过滤链定义，从上向下顺序执行，一般将 /**放在最为下边 --> : 这是一个坑，一不小心代码就不好使了
 		LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
+		// 配置不登录可以访问的资源，anon 表示资源都可以匿名访问
+		// 配置记住我或认证通过可以访问的地址
+		filterChainDefinitionMap.put("/login", "kickout");
 		// 表单拦截验证,authc
 		filterChainDefinitionMap.put("/index", "authc");
 		// 匿名拦截验证
-		filterChainDefinitionMap.put("/login", "anon");
 		filterChainDefinitionMap.put("/loginUser", "anon");
 		// 角色拦截验证,要求roles必须是admin
 		filterChainDefinitionMap.put("/admin", "roles[admin]");
 		// 权限拦截验证,要求perms必须是edit
 		filterChainDefinitionMap.put("/view", "perms[view]");
 		filterChainDefinitionMap.put("/druid/**", "anon");
-		// 用户拦截验证
-		filterChainDefinitionMap.put("/**", "user");
 		// logout是shiro提供的过滤器
 		filterChainDefinitionMap.put("/logout", "logout");
-		bean.setFilterChainDefinitionMap(filterChainDefinitionMap);
+		// 用户拦截验证
+		filterChainDefinitionMap.put("/**", "kickout");
+		shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
-		return bean;
+		return shiroFilterFactoryBean;
 	}
 
 	/**
@@ -127,7 +128,8 @@ public class ShiroConfiguration {
 	 * @return
 	 */
 	@Bean("securityManager")
-	public SecurityManager securityManager(@Qualifier("authRealm") ShiroRealm authRealm) {
+	public SecurityManager securityManager(ShiroRealm authRealm, EhCacheManager shiroEhCacheManager,
+			RememberMeManager rememberMeManager, SessionManager sessionManager) {
 		DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
 		// 设置自定义realm
 		manager.setRealm(authRealm);
@@ -176,7 +178,7 @@ public class ShiroConfiguration {
 	}
 
 	@Bean("credentialMatcher")
-	public CredentialMatcher credentialMatcher() {
+	public CredentialMatcher credentialMatcher(EhCacheManager shiroEhCacheManager) {
 		return new CredentialMatcher(shiroEhCacheManager);
 	}
 
@@ -196,8 +198,7 @@ public class ShiroConfiguration {
 	}
 
 	/**
-	 * 权限验证,开发cookie
-	 * FormAuthenticationFilter 过滤器 过滤记住我
+	 * 权限验证,开发cookie FormAuthenticationFilter 过滤器 过滤记住我
 	 * 
 	 * formAuthentication 权限过滤器, 所有的authc 即权限过滤请求,都会进行formAuthenticationFilter过滤
 	 * 
