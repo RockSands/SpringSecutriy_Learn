@@ -4,22 +4,17 @@ import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.apache.shiro.cache.ehcache.EhCacheManager;
-import org.apache.shiro.codec.Base64;
 import org.apache.shiro.mgt.RememberMeManager;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator;
-import org.apache.shiro.session.mgt.eis.SessionIdGenerator;
+import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
-import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
-import org.apache.shiro.web.servlet.SimpleCookie;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
@@ -38,8 +33,19 @@ import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
  *
  */
 @Configuration
-@EnableCaching
 public class ShiroConfiguration {
+	
+	@Autowired
+	@Qualifier("ehCacheManager")
+	private EhCacheManager ehCacheManager;
+
+	@Autowired
+	@Qualifier("rememberMeManager")
+	private RememberMeManager rememberMeManager;
+
+	@Autowired
+	@Qualifier("sessionManager")
+	private SessionManager sessionManager;
 
 	/**
 	 * 解决： 无权限页面不跳转 shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized")
@@ -121,8 +127,7 @@ public class ShiroConfiguration {
 	 * @return
 	 */
 	@Bean("securityManager")
-	public SecurityManager securityManager(@Qualifier("authRealm") ShiroRealm authRealm, EhCacheManager ehCacheManager,
-			@Qualifier("rememberMeManager") RememberMeManager rememberMeManager) {
+	public SecurityManager securityManager(@Qualifier("authRealm") ShiroRealm authRealm) {
 		DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
 		// 设置自定义realm
 		manager.setRealm(authRealm);
@@ -132,8 +137,8 @@ public class ShiroConfiguration {
 		// 配置ehcache缓存管理器 , 此处增加缓存为核心,表示shiro全面使用缓存
 		manager.setCacheManager(ehCacheManager);
 
-		// 配置自定义session管理，使用redis 参考博客：
-		// securityManager.setSessionManager(sessionManager());
+		// 配置自定义session管理
+		manager.setSessionManager(sessionManager);
 		return manager;
 	}
 
@@ -156,8 +161,7 @@ public class ShiroConfiguration {
 		ShiroRealm shiroRealm = new ShiroRealm();
 		shiroRealm.setCredentialsMatcher(matcher);
 		/*
-		 * 在SecurityManager 启动缓存时, shiroRealm默认开启缓存
-		 * 这里主要是指定缓存空间
+		 * 在SecurityManager 启动缓存时, shiroRealm默认开启缓存 这里主要是指定缓存空间
 		 */
 		shiroRealm.setCachingEnabled(true);
 		// 启用身份验证缓存，即缓存AuthenticationInfo信息
@@ -172,80 +176,8 @@ public class ShiroConfiguration {
 	}
 
 	@Bean("credentialMatcher")
-	public CredentialMatcher credentialMatcher(@Qualifier("ehCacheManager") EhCacheManager ehCacheManager) {
+	public CredentialMatcher credentialMatcher() {
 		return new CredentialMatcher(ehCacheManager);
-	}
-
-	/**
-	 * Shiro的Cookie操作 cookie对象;会话Cookie模板 ,默认为: JSESSIONID 问题:
-	 * 与SERVLET容器名冲突,重新定义为sid或rememberMe，自定义
-	 * 
-	 * @return
-	 */
-	@Bean("rememberMeCookie")
-	public SimpleCookie rememberMeCookie() {
-		// 这个参数是cookie的名称
-		SimpleCookie simpleCookie = new SimpleCookie("rememberMe");
-		// setcookie的httponly属性如果设为true的话，会增加对xss防护的安全系数
-		// 安全操作包括:
-		// setcookie()的第七个参数
-		// 设为true后，只能通过http访问，javascript无法访问
-		// 防止xss读取cookie
-		simpleCookie.setHttpOnly(true);
-		simpleCookie.setPath("/");
-		// <!-- 记住我cookie生效时间30天 ,单位秒;-->
-		simpleCookie.setMaxAge(2592000);
-		return simpleCookie;
-	}
-
-	/**
-	 * cookie管理对象;记住我功能,rememberMe管理器
-	 * 
-	 * @return
-	 */
-	@Bean("rememberMeManager")
-	public CookieRememberMeManager rememberMeManager(
-			@Qualifier("rememberMeCookie") org.apache.shiro.web.servlet.Cookie cookie) {
-		CookieRememberMeManager cookieRememberMeManager = new CookieRememberMeManager();
-		cookieRememberMeManager.setCookie(cookie);
-		// rememberMe cookie加密的密钥 建议每个项目都不一样 默认AES算法 密钥长度(128 256 512 位)
-		cookieRememberMeManager.setCipherKey(Base64.decode("4AvVhmFLUs0KTA3Kprsdag=="));
-		return cookieRememberMeManager;
-	}
-
-	/**
-	 * FormAuthenticationFilter 过滤器 过滤记住我
-	 * 
-	 * @return
-	 */
-	@Bean
-	public FormAuthenticationFilter formAuthenticationFilter() {
-		FormAuthenticationFilter formAuthenticationFilter = new FormAuthenticationFilter();
-		// 对应前端的checkbox的name = rememberMe
-		formAuthenticationFilter.setRememberMeParam("rememberMe");
-		return formAuthenticationFilter;
-	}
-
-	@Bean
-	public EhCacheManager ehCacheManager(net.sf.ehcache.CacheManager cacheManager) {
-		EhCacheManager em = new EhCacheManager();
-		// 将ehcacheManager转换成shiro包装后的ehcacheManager对象
-		em.setCacheManager(cacheManager);
-		return em;
-	}
-
-	/**
-	 * 定时清理缓存 让某个实例的某个方法的返回值注入为Bean的实例 Spring静态注入
-	 * 
-	 * @return
-	 */
-	@Bean
-	public MethodInvokingFactoryBean getMethodInvokingFactoryBean(
-			@Qualifier("securityManager") SecurityManager securityManager) {
-		MethodInvokingFactoryBean factoryBean = new MethodInvokingFactoryBean();
-		factoryBean.setStaticMethod("org.apache.shiro.SecurityUtils.setSecurityManager");
-		factoryBean.setArguments(new Object[] { securityManager });
-		return factoryBean;
 	}
 
 	/**
@@ -264,6 +196,23 @@ public class ShiroConfiguration {
 	}
 
 	/**
+	 * 权限验证,开发cookie
+	 * FormAuthenticationFilter 过滤器 过滤记住我
+	 * 
+	 * formAuthentication 权限过滤器, 所有的authc 即权限过滤请求,都会进行formAuthenticationFilter过滤
+	 * 
+	 * 
+	 * @return
+	 */
+	@Bean
+	public FormAuthenticationFilter formAuthenticationFilter() {
+		FormAuthenticationFilter formAuthenticationFilter = new FormAuthenticationFilter();
+		// 对应前端的checkbox的name = rememberMe
+		formAuthenticationFilter.setRememberMeParam("rememberMe");
+		return formAuthenticationFilter;
+	}
+
+	/**
 	 * thymeleaf生效
 	 * 
 	 * @return
@@ -271,25 +220,6 @@ public class ShiroConfiguration {
 	@Bean(name = "shiroDialect")
 	public ShiroDialect shiroDialect() {
 		return new ShiroDialect();
-	}
-	
-	/**
-	 * 配置session监听
-	 * @return
-	 */
-	@Bean("sessionListener")
-	public ShiroSessionListener sessionListener(){
-	    ShiroSessionListener sessionListener = new ShiroSessionListener();
-	    return sessionListener;
-	}
-	
-	/**
-	 * 配置会话ID生成器
-	 * @return
-	 */
-	@Bean
-	public SessionIdGenerator sessionIdGenerator() {
-	    return new JavaUuidSessionIdGenerator();
 	}
 
 	@Bean
