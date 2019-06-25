@@ -1,8 +1,8 @@
 package com.shiro.cache;
 
-import org.apache.shiro.cache.
 import org.crazycake.shiro.RedisCacheManager;
 import org.crazycake.shiro.RedisManager;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,5 +28,11 @@ public class ShiroCacheConfig {
         //用户权限信息缓存时间
         redisCacheManager.setExpire(200000);
         return redisCacheManager;
+	}
+	
+	@Bean
+	@ConfigurationProperties(prefix = "spring.redis") 
+	public RedisManager redisManager() {
+        return new RedisManager();
 	}
 }
