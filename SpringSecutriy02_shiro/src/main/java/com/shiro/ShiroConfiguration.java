@@ -44,8 +44,8 @@ import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
 public class ShiroConfiguration {
 
 	/**
-	 * 解决： 无权限页面不跳转 shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized")
-	 * 无效 shiro的源代码ShiroFilterFactoryBean.Java定义的filter必须满足filter instanceof
+	 * 解决： 无权限页面不跳转 shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized") 无效
+	 * shiro的源代码ShiroFilterFactoryBean.Java定义的filter必须满足filter instanceof
 	 * AuthorizationFilter，
 	 * 只有perms，roles，ssl，rest，port才是属于AuthorizationFilter，而anon，authcBasic，auchc，user是AuthenticationFilter，
 	 * 所以unauthorizedUrl设置后页面不跳转 Shiro注解模式下，登录失败与没有权限都是通过抛出异常。
@@ -100,9 +100,10 @@ public class ShiroConfiguration {
 		// 配置访问权限 必须是LinkedHashMap，因为它必须保证有序
 		// 过滤链定义，从上向下顺序执行，一般将 /**放在最为下边 --> : 这是一个坑，一不小心代码就不好使了
 		LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
-		// 配置不登录可以访问的资源，anon 表示资源都可以匿名访问
-		// 配置记住我或认证通过可以访问的地址
-		filterChainDefinitionMap.put("/login", "kickout");
+		// 增加验证码
+		filterChainDefinitionMap.put("/Captcha.jpg", "anon");
+		// 配置不登录可以访问的资源， 表示资源都可以匿名访问
+		filterChainDefinitionMap.put("/login", "kickout,anon");
 		// 表单拦截验证,authc
 		filterChainDefinitionMap.put("/index", "authc");
 		// 匿名拦截验证
@@ -115,7 +116,7 @@ public class ShiroConfiguration {
 		// logout是shiro提供的过滤器
 		filterChainDefinitionMap.put("/logout", "logout");
 		// 用户拦截验证
-		filterChainDefinitionMap.put("/**", "kickout");
+		filterChainDefinitionMap.put("/**", "kickout,user");
 		shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
 		return shiroFilterFactoryBean;
@@ -155,7 +156,7 @@ public class ShiroConfiguration {
 	}
 
 	@Bean("authRealm")
-	public ShiroRealm authRealm(@Qualifier("credentialMatcher") RetryLimitHashedCredentialsMatcher matcher) {
+	public ShiroRealm authRealm(@Qualifier("credentialsMatcher") RetryLimitHashedCredentialsMatcher matcher) {
 		// ShiroRealm authRealm = new ShiroRealm();
 		// 内存缓存
 		// authRealm.setCacheManager(new MemoryConstrainedCacheManager());
@@ -199,7 +200,6 @@ public class ShiroConfiguration {
 	public RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher(EhCacheManager shiroEhCacheManager) {
 		RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher = new RetryLimitHashedCredentialsMatcher(
 				shiroEhCacheManager);
-
 		// 如果密码加密,可以打开下面配置
 		// 加密算法的名称
 		// retryLimitHashedCredentialsMatcher.setHashAlgorithmName("MD5");
@@ -207,13 +207,11 @@ public class ShiroConfiguration {
 		// retryLimitHashedCredentialsMatcher.setHashIterations(1024);
 		// 是否存储为16进制
 		// retryLimitHashedCredentialsMatcher.setStoredCredentialsHexEncoded(true);
-
 		return retryLimitHashedCredentialsMatcher;
 	}
 
 	/**
-	 * 开启shiro 注解模式 可以在controller中的方法前加上注解
-	 * 如 @RequiresPermissions("userInfo:add")
+	 * 开启shiro 注解模式 可以在controller中的方法前加上注解 如 @RequiresPermissions("userInfo:add")
 	 * 
 	 * @param securityManager
 	 * @return

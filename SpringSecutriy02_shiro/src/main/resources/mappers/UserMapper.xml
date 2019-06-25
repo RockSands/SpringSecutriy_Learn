@@ -60,17 +60,17 @@
 		</trim>
 	</insert>
 
+	<update id="update" parameterType="com.model.User">
+		update user_info set state =
+		#{state} where uid = #{uid}
+	</update>
+
 	<insert id="insertRoles" parameterType="com.model.User">
 		insert into user_role values
 		<foreach collection="roles" item="role">
 			(#{uid},#{role.id})
 		</foreach>
 	</insert>
-
-	<upate id="update" parameterType="com.model.User">
-		update user_info set state =
-		#{state} where uid = #{uid}
-	</upate>
 
 	<!-- 删除用户 -->
 	<delete id="del">

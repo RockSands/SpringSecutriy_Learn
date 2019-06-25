@@ -8,6 +8,7 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -26,7 +27,7 @@ import com.model.User;
  * 
  * 权限校验类
  * 
- * 在开启缓存后,doGetAuthorizationInfo  会进入缓存,  在之后的情况下回走缓存
+ * 在开启缓存后,doGetAuthorizationInfo 会进入缓存, 在之后的情况下回走缓存
  * 
  * @author Administrator
  *
@@ -43,8 +44,7 @@ public class ShiroRealm extends AuthorizingRealm {
 	private RoleMapper roleMapper;
 
 	/**
-	 * 授权用户权限
-	 * 授权的方法是在碰到<shiro:hasPermission name=''></shiro:hasPermission>标签的时候调用的
+	 * 授权用户权限 授权的方法是在碰到<shiro:hasPermission name=''></shiro:hasPermission>标签的时候调用的
 	 * 它会去检测shiro框架中的权限(这里的permissions)是否包含有该标签的name值,如果有,里面的内容显示
 	 * 如果没有,里面的内容不予显示(这就完成了对于权限的认证.)
 	 *
@@ -105,20 +105,31 @@ public class ShiroRealm extends AuthorizingRealm {
 		System.out.println("=doGetAuthenticationInfo=>");
 		UsernamePasswordToken usernamePasswordToken = (UsernamePasswordToken) token;
 		String username = usernamePasswordToken.getUsername();
+		// String password = new String(usernamePasswordToken.getPassword());
 
 		if (StringUtils.isEmpty(username)) {
-			return new SimpleAuthenticationInfo();
+			throw new UnknownAccountException("用户不能为空！");
 		}
 		User user = userMapper.findByUserName(username);
+		if (user == null) {
+			throw new UnknownAccountException("用户不存在！");
+		}
+		if ("1".equals(user.getState())) {
+			throw new UnknownAccountException("您的用户[" + user.getUsername() + "]已经锁定！");
+		}
 		return new SimpleAuthenticationInfo(user, user.getPassword(), this.getClass().getName());
 	}
-	
-	/* 重载缓存的Key
-	 * @see org.apache.shiro.realm.AuthorizingRealm#getAuthorizationCacheKey(org.apache.shiro.subject.PrincipalCollection)
+
+	/*
+	 * 重载缓存的Key
+	 * 
+	 * @see
+	 * org.apache.shiro.realm.AuthorizingRealm#getAuthorizationCacheKey(org.apache.
+	 * shiro.subject.PrincipalCollection)
 	 */
 	@Override
-    protected Object getAuthorizationCacheKey(PrincipalCollection principals) {
-		User user = (User)principals.getPrimaryPrincipal();
+	protected Object getAuthorizationCacheKey(PrincipalCollection principals) {
+		User user = (User) principals.getPrimaryPrincipal();
 		return user.getUsername();
-    }
+	}
 }

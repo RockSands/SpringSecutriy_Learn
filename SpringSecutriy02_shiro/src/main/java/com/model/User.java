@@ -6,16 +6,17 @@ import java.util.Set;
 
 /**
  * Cookie 需要User序列化
+ * 
  * @author Administrator
  *
  */
-public class User implements Serializable{
+public class User implements Serializable {
 
 	/**
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	private Integer uid;
 	private String username;
 	private String password;
@@ -79,4 +80,5 @@ public class User implements Serializable{
 	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
 	}
+
 }

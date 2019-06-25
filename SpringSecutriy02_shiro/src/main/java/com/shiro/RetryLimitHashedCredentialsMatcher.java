@@ -44,7 +44,7 @@ public class RetryLimitHashedCredentialsMatcher extends SimpleCredentialsMatcher
             retryCount = new AtomicInteger(0);
             passwordRetryCache.put(username, retryCount);
         }
-        if (retryCount.incrementAndGet() > 5) {
+        if (retryCount.incrementAndGet() > 3) {
             //如果用户登陆失败次数大于5次 抛出锁定用户异常  并修改数据库字段
             User user = userMapper.findByUserName(username);
             if (user != null && "0".equals(user.getState())){

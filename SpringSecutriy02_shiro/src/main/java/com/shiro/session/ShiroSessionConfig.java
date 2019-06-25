@@ -12,6 +12,7 @@ import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.session.mgt.eis.SessionIdGenerator;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -97,14 +98,14 @@ public class ShiroSessionConfig {
 	 */
 	@Bean("sessionManager")
 	public SessionManager sessionManager(EhCacheManager shiroEhCacheManager, ShiroSessionListener shiroSessionListener,
-			SessionDAO sessionDAO) {
+			SessionDAO sessionDAO,@Qualifier("sessionIdCookie")SimpleCookie sessionIdCookie) {
 
 		DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
 		Collection<SessionListener> listeners = new ArrayList<SessionListener>();
 		// 配置监听
 		listeners.add(shiroSessionListener);
 		sessionManager.setSessionListeners(listeners);
-		sessionManager.setSessionIdCookie(sessionIdCookie());
+		sessionManager.setSessionIdCookie(sessionIdCookie);
 		sessionManager.setSessionDAO(sessionDAO);
 		sessionManager.setCacheManager(shiroEhCacheManager);
 
