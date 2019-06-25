@@ -106,11 +106,12 @@ public class ShiroSessionConfig {
 		listeners.add(shiroSessionListener);
 		sessionManager.setSessionListeners(listeners);
 		sessionManager.setSessionIdCookie(sessionIdCookie);
+		sessionManager.setSessionIdCookieEnabled(true);
 		sessionManager.setSessionDAO(sessionDAO);
 		sessionManager.setCacheManager(shiroEhCacheManager);
 
 		// 全局会话超时时间（单位毫秒），默认30分钟 暂时设置为10秒钟 用来测试
-		sessionManager.setGlobalSessionTimeout(1000 * 30);
+		sessionManager.setGlobalSessionTimeout(1000 * 20);
 		// 是否开启删除无效的session对象 默认为true
 		sessionManager.setDeleteInvalidSessions(true);
 		// 是否开启定时调度器进行检测过期session 默认为true

@@ -236,9 +236,7 @@ public class ShiroConfiguration {
 
 	/**
 	 * 权限验证,开发cookie FormAuthenticationFilter 过滤器 过滤记住我
-	 * 
 	 * formAuthentication 权限过滤器, 所有的authc 即权限过滤请求,都会进行formAuthenticationFilter过滤
-	 * 
 	 * 
 	 * @return
 	 */

@@ -96,6 +96,13 @@ public class KickoutSessionControlFilter extends AccessControlFilter {
 		}
 
 		// 如果队列里的sessionId数超出最大会话数，开始踢人
+		/*
+		 * org.apache.shiro.session.UnknownSessionException: There is no session with id
+		 * 
+		 * 这个问题是由于session缓存的超时和session的超时不一致导致的
+		 * 所以session缓存的超时与session超时必须一致
+		 * 
+		 */
 		while (deque.size() > maxSession) {
 			Serializable kickoutSessionId = null;
 			if (kickoutAfter) { // 如果踢出后者

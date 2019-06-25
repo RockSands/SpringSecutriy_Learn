@@ -61,18 +61,18 @@ public class LoginController {
 	// }
 	// }
 
-	@RequestMapping(value = "/login", method = { RequestMethod.POST,RequestMethod.GET})
+	@RequestMapping(value = "/login", method = { RequestMethod.POST, RequestMethod.GET })
 	public String loginUser(HttpServletRequest request, String username, String password, boolean rememberMe,
 			String captcha, Model model) {
 
 		// 校验验证码
 		// session中的验证码
-		// String sessionCaptcha = (String) SecurityUtils.getSubject().getSession()
-		// .getAttribute(CaptchaController.KEY_CAPTCHA);
-		// if (null == captcha || !captcha.equalsIgnoreCase(sessionCaptcha)) {
-		// model.addAttribute("msg", "验证码错误！");
-		// return "login";
-		// }
+		String sessionCaptcha = (String) SecurityUtils.getSubject().getSession()
+				.getAttribute(CaptchaController.KEY_CAPTCHA);
+//		if (null == captcha || !captcha.equalsIgnoreCase(sessionCaptcha)) {
+//			model.addAttribute("msg", "验证码错误！");
+//			return "login";
+//		}
 
 		// 对密码进行加密
 		// password=new SimpleHash("md5", password,
