@@ -6,12 +6,13 @@ import java.util.Collection;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.session.SessionListener;
 import org.apache.shiro.session.mgt.SessionManager;
-import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
 import org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator;
 import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.session.mgt.eis.SessionIdGenerator;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.crazycake.shiro.RedisManager;
+import org.crazycake.shiro.RedisSessionDAO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,23 +52,41 @@ public class ShiroSessionConfig {
 	}
 
 	/**
+	 * EhCache实现
+	 * 
 	 * SessionDAO的作用是为Session提供CRUD并进行持久化的一个shiro组件 MemorySessionDAO
 	 * 直接在内存中进行会话维护 EnterpriseCacheSessionDAO
 	 * 提供了缓存功能的会话维护，默认情况下使用MapCache实现，内部使用ConcurrentHashMap保存缓存的会话。
 	 * 
 	 * @return
 	 */
-	@Bean
-	public SessionDAO sessionDAO(CacheManager shiroCacheManager) {
-		EnterpriseCacheSessionDAO enterpriseCacheSessionDAO = new EnterpriseCacheSessionDAO();
-		// 使用ehCacheManager
-		enterpriseCacheSessionDAO.setCacheManager(shiroCacheManager);
-		// 设置session缓存的名字 默认为 shiro-activeSessionCache
-		enterpriseCacheSessionDAO.setActiveSessionsCacheName("shiro-activeSessionCache");
-		// sessionId生成器
-		enterpriseCacheSessionDAO.setSessionIdGenerator(sessionIdGenerator());
-		return enterpriseCacheSessionDAO;
-	}
+//	@Bean
+//	public SessionDAO sessionDAO(CacheManager shiroCacheManager) {
+//		EnterpriseCacheSessionDAO enterpriseCacheSessionDAO = new EnterpriseCacheSessionDAO();
+//		// 使用ehCacheManager
+//		enterpriseCacheSessionDAO.setCacheManager(shiroCacheManager);
+//		// 设置session缓存的名字 默认为 shiro-activeSessionCache
+//		enterpriseCacheSessionDAO.setActiveSessionsCacheName("shiro-activeSessionCache");
+//		// sessionId生成器
+//		enterpriseCacheSessionDAO.setSessionIdGenerator(sessionIdGenerator());
+//		return enterpriseCacheSessionDAO;
+//	}
+	
+    /**
+     * Redis实现
+     * SessionDAO的作用是为Session提供CRUD并进行持久化的一个shiro组件
+     * MemorySessionDAO 直接在内存中进行会话维护
+     * EnterpriseCacheSessionDAO  提供了缓存功能的会话维护，默认情况下使用MapCache实现，内部使用ConcurrentHashMap保存缓存的会话。
+     * @return
+     */
+    @Bean
+    public SessionDAO sessionDAO(RedisManager redisManager) {
+        RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
+        redisSessionDAO.setRedisManager(redisManager);
+        //session在redis中的保存时间,最好大于session会话超时时间
+        redisSessionDAO.setExpire(12000);
+        return redisSessionDAO;
+    }
 
 	/**
 	 * 配置保存sessionId的cookie 注意：这里的cookie 不是上面的记住我 cookie 记住我需要一个cookie session管理
