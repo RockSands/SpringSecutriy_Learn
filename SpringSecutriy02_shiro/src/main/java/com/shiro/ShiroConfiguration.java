@@ -5,7 +5,7 @@ import java.util.Properties;
 
 import javax.servlet.Filter;
 
-import org.apache.shiro.cache.ehcache.EhCacheManager;
+import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.mgt.RememberMeManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
@@ -17,8 +17,12 @@ import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
+import org.springframework.boot.web.servlet.ErrorPage;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 
 import com.shiro.cache.ShiroCacheConfig;
@@ -61,8 +65,25 @@ public class ShiroConfiguration {
 		resolver.setExceptionMappings(properties);
 		return resolver;
 	}
+	
+    /**
+     * 解决spring-boot Whitelabel Error Page
+     * @return
+     */
+    @Bean
+    public EmbeddedServletContainerCustomizer containerCustomizer() {
+        return new EmbeddedServletContainerCustomizer() {
+            @Override
+            public void customize(ConfigurableEmbeddedServletContainer container) {
+                ErrorPage error401Page = new ErrorPage(HttpStatus.UNAUTHORIZED, "/unauthorized.html");
+                ErrorPage error404Page = new ErrorPage(HttpStatus.NOT_FOUND, "/404.html");
+                ErrorPage error500Page = new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500.html");
+                container.addErrorPages(error401Page, error404Page, error500Page);
+            }
+        };
+    }
 
-	/**
+    /**
 	 * ShiroFilterFactoryBean 处理拦截资源文件问题。
 	 * 注意：初始化ShiroFilterFactoryBean的时候需要注入：SecurityManager
 	 * Web应用中,Shiro可控制的Web请求必须经过Shiro主过滤器的拦截
@@ -139,7 +160,7 @@ public class ShiroConfiguration {
 	 * @return
 	 */
 	@Bean("securityManager")
-	public SecurityManager securityManager(ShiroRealm authRealm, EhCacheManager shiroEhCacheManager,
+	public SecurityManager securityManager(ShiroRealm authRealm, CacheManager shiroCacheManager,
 			RememberMeManager rememberMeManager, SessionManager sessionManager) {
 		DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
 		// 设置自定义realm
@@ -148,7 +169,7 @@ public class ShiroConfiguration {
 		manager.setRememberMeManager(rememberMeManager);
 
 		// 配置ehcache缓存管理器 , 此处增加缓存为核心,表示shiro全面使用缓存
-		manager.setCacheManager(shiroEhCacheManager);
+		manager.setCacheManager(shiroCacheManager);
 
 		// 配置自定义session管理
 		manager.setSessionManager(sessionManager);
@@ -191,25 +212,25 @@ public class ShiroConfiguration {
 	/**
 	 * 普通
 	 * 
-	 * @param shiroEhCacheManager
+	 * @param shiroCacheManager
 	 * @return
 	 */
 	// @Bean("credentialMatcher")
-	// public CredentialMatcher credentialMatcher(EhCacheManager
-	// shiroEhCacheManager) {
-	// return new CredentialMatcher(shiroEhCacheManager);
+	// public CredentialMatcher credentialMatcher(CacheManager
+	// shiroCacheManager) {
+	// return new CredentialMatcher(shiroCacheManager);
 	// }
 
 	/**
 	 * 功能性
 	 * 
-	 * @param shiroEhCacheManager
+	 * @param shiroCacheManager
 	 * @return
 	 */
 	@Bean("credentialsMatcher")
-	public RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher(EhCacheManager shiroEhCacheManager) {
+	public RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher(CacheManager shiroCacheManager) {
 		RetryLimitHashedCredentialsMatcher retryLimitHashedCredentialsMatcher = new RetryLimitHashedCredentialsMatcher(
-				shiroEhCacheManager);
+				shiroCacheManager);
 		// 如果密码加密,可以打开下面配置
 		// 加密算法的名称
 		// retryLimitHashedCredentialsMatcher.setHashAlgorithmName("MD5");

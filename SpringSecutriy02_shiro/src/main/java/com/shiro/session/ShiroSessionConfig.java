@@ -3,7 +3,7 @@ package com.shiro.session;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.shiro.cache.ehcache.EhCacheManager;
+import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.session.SessionListener;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
@@ -58,10 +58,10 @@ public class ShiroSessionConfig {
 	 * @return
 	 */
 	@Bean
-	public SessionDAO sessionDAO(EhCacheManager shiroEhCacheManager) {
+	public SessionDAO sessionDAO(CacheManager shiroCacheManager) {
 		EnterpriseCacheSessionDAO enterpriseCacheSessionDAO = new EnterpriseCacheSessionDAO();
 		// 使用ehCacheManager
-		enterpriseCacheSessionDAO.setCacheManager(shiroEhCacheManager);
+		enterpriseCacheSessionDAO.setCacheManager(shiroCacheManager);
 		// 设置session缓存的名字 默认为 shiro-activeSessionCache
 		enterpriseCacheSessionDAO.setActiveSessionsCacheName("shiro-activeSessionCache");
 		// sessionId生成器
@@ -97,7 +97,7 @@ public class ShiroSessionConfig {
 	 * @return
 	 */
 	@Bean("sessionManager")
-	public SessionManager sessionManager(EhCacheManager shiroEhCacheManager, ShiroSessionListener shiroSessionListener,
+	public SessionManager sessionManager(CacheManager shiroCacheManager, ShiroSessionListener shiroSessionListener,
 			SessionDAO sessionDAO,@Qualifier("sessionIdCookie")SimpleCookie sessionIdCookie) {
 
 		DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
@@ -108,7 +108,7 @@ public class ShiroSessionConfig {
 		sessionManager.setSessionIdCookie(sessionIdCookie);
 		sessionManager.setSessionIdCookieEnabled(true);
 		sessionManager.setSessionDAO(sessionDAO);
-		sessionManager.setCacheManager(shiroEhCacheManager);
+		sessionManager.setCacheManager(shiroCacheManager);
 
 		// 全局会话超时时间（单位毫秒），默认30分钟 暂时设置为10秒钟 用来测试
 		sessionManager.setGlobalSessionTimeout(1000 * 20);
@@ -133,12 +133,12 @@ public class ShiroSessionConfig {
 	 * @return
 	 */
 	@Bean
-	public KickoutSessionControlFilter kickoutSessionControlFilter(SessionManager sessionManager,EhCacheManager shiroEhCacheManager){
+	public KickoutSessionControlFilter kickoutSessionControlFilter(SessionManager sessionManager,CacheManager shiroCacheManager){
 	    KickoutSessionControlFilter kickoutSessionControlFilter = new KickoutSessionControlFilter();
 	    //用于根据会话ID，获取会话进行踢出操作的；
 	    kickoutSessionControlFilter.setSessionManager(sessionManager);
 	    //使用cacheManager获取相应的cache来缓存用户登录的会话；用于保存用户—会话之间的关系的；
-	    kickoutSessionControlFilter.setCacheManager(shiroEhCacheManager);
+	    kickoutSessionControlFilter.setCacheManager(shiroCacheManager);
 	    //是否踢出后来登录的，默认是false；即后者登录的用户踢出前者登录的用户；
 	    kickoutSessionControlFilter.setKickoutAfter(false);
 	    //同一个用户最大的会话数，默认1；比如2的意思是同一个用户允许最多同时两个人登录；

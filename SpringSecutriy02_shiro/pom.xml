@@ -11,7 +11,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- thymeleaf-extras-shiro由于是2.0.0版本，  默认的thymeleaf为2.5.1版本，版本过低且缺少类，无法启动，需要添加如下配置 -->
+		<!-- thymeleaf-extras-shiro由于是2.0.0版本， 默认的thymeleaf为2.5.1版本，版本过低且缺少类，无法启动，需要添加如下配置 -->
 		<thymeleaf.version>3.0.7.RELEASE</thymeleaf.version>
 		<thymeleaf-layout-dialect.version>2.2.2</thymeleaf-layout-dialect.version>
 	</properties>
@@ -60,16 +60,25 @@
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 		<!-- ehcache -->
+		<!-- <dependency> <groupId>net.sf.ehcache</groupId> <artifactId>ehcache</artifactId> 
+			</dependency> <dependency> <groupId>org.apache.shiro</groupId> <artifactId>shiro-ehcache</artifactId> 
+			<version>${shiro.version}</version> </dependency> -->
+		<!-- shiro-redis -->
 		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache</artifactId>
+			<groupId>org.crazycake</groupId>
+			<artifactId>shiro-redis</artifactId>
+			<version>3.1.0</version>
 		</dependency>
+		<!-- radis -->
 		<dependency>
-			<groupId>org.apache.shiro</groupId>
-			<artifactId>shiro-ehcache</artifactId>
-			<version>${shiro.version}</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
-
+		<!-- redisClients,集群所需配置 -->
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
