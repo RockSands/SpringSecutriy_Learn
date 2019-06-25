@@ -102,6 +102,16 @@ public class ShiroConfiguration {
 		LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
 		// 增加验证码
 		filterChainDefinitionMap.put("/Captcha.jpg", "anon");
+		/*
+		 * 静态资源放行
+		 */
+		filterChainDefinitionMap.put("/images/**","anon");
+		filterChainDefinitionMap.put("/js/**","anon");
+		filterChainDefinitionMap.put("/css/**","anon");
+		filterChainDefinitionMap.put("/lib/**","anon");
+		filterChainDefinitionMap.put("/fonts/**","anon");
+		filterChainDefinitionMap.put("/icons/** ","anon");
+		
 		// 配置不登录可以访问的资源， 表示资源都可以匿名访问
 		filterChainDefinitionMap.put("/login", "kickout,anon");
 		// 表单拦截验证,authc
