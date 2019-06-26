@@ -3,10 +3,61 @@
 
 <mapper namespace="com.mapper.UserMapper">
 
+	<resultMap type="com.model.User" id="userWithRolesMap">
+		<id column="uid" property="uid" />
+		<result column="username" property="username" />
+		<result column="password" property="password" />
+		<result column="name" property="name" />
+		<result column="id_card_num" property="id_card_num" />
+		<result column="state" property="state" />
+		<collection property="roles" javaType="java.util.Set"
+			ofType="com.model.Role">
+			<id column="rid" property="id" />
+			<result column="role" property="role" />
+			<result column="description" property="description" />
+			<result column="available" property="available" />
+			<collection property="permissions" javaType="java.util.Set"
+				ofType="com.model.Permission">
+				<id column="pid" property="id" />
+				<result column="parent_id" property="parent_id" />
+				<result column="parent_ids" property="parent_ids" />
+				<result column="permission" property="permission" />
+				<result column="resource_type" property="resource_type" />
+				<result column="url" property="url" />
+				<result column="name" property="name" />
+				<result column="available" property="available" />
+			</collection>
+		</collection>
+	</resultMap>
+
 	<!-- 查询用户信息 -->
-	<select id="findByUserName" resultType="com.model.User">
-		SELECT * FROM user_info
-		WHERE username = #{username}
+	<select id="findByUserName" resultMap="userWithRolesMap">
+		SELECT
+			u.*,
+			r.id rid,
+			r.description,
+			r.available,
+			r.role,
+			p.id pid,
+			p.`name` pname,
+			p.url,
+			p.resource_type,
+			p.permission,
+			p.parent_ids,
+			p.parent_id,
+			p.available 
+		FROM
+			user_info u,
+			user_role ur,
+			role r,
+			role_permission rp,
+			permission p 
+		WHERE
+			u.uid = ur.uid 
+			AND ur.role_id = r.id 
+			AND r.id = rp.role_id 
+			AND rp.permission_id = p.id
+			AND u.username = #{username}
 	</select>
 
 	<!-- 添加用户 -->

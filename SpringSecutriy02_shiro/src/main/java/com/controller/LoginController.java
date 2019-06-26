@@ -69,10 +69,10 @@ public class LoginController {
 		// session中的验证码
 		String sessionCaptcha = (String) SecurityUtils.getSubject().getSession()
 				.getAttribute(CaptchaController.KEY_CAPTCHA);
-		if (null == captcha || !captcha.equalsIgnoreCase(sessionCaptcha)) {
-			model.addAttribute("msg", "验证码错误！");
-			return "login";
-		}
+//		if (null == captcha || !captcha.equalsIgnoreCase(sessionCaptcha)) {
+//			model.addAttribute("msg", "验证码错误！");
+//			return "login";
+//		}
 
 		// 对密码进行加密
 		// password=new SimpleHash("md5", password,

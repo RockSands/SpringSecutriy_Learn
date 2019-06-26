@@ -1,10 +1,16 @@
 package com.model;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Permission {
+public class Permission implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private Integer id;
 	private Integer parent_id;
 	private String parent_ids;

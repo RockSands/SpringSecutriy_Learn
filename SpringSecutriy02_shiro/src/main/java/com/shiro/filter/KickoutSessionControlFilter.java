@@ -1,4 +1,4 @@
-package com.shiro.session;
+package com.shiro.filter;
 
 import java.io.Serializable;
 import java.util.Deque;
@@ -33,7 +33,9 @@ public class KickoutSessionControlFilter extends AccessControlFilter {
 
 	/** 同一个帐号最大会话数 默认1 */
 	private int maxSession = 1;
+	
 	private SessionManager sessionManager;
+	
 	private Cache<String, Deque<Serializable>> cache;
 
 	public void setKickoutUrl(String kickoutUrl) {

@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.shiro.filter.KickoutSessionControlFilter;
+
 /**
  * Shiro提供了完整的企业级会话管理功能，不依赖于底层容器（如Tomcat），
  * 不管是J2SE还是J2EE环境都可以使用，提供了会话管理，会话事件监听，会话存储/持久化，容器无关的集群，失效/过期支持，
@@ -130,7 +132,7 @@ public class ShiroSessionConfig {
 		sessionManager.setCacheManager(shiroCacheManager);
 
 		// 全局会话超时时间（单位毫秒），默认30分钟 暂时设置为10秒钟 用来测试
-		sessionManager.setGlobalSessionTimeout(1000 * 20);
+		sessionManager.setGlobalSessionTimeout(1000 * 60);
 		// 是否开启删除无效的session对象 默认为true
 		sessionManager.setDeleteInvalidSessions(true);
 		// 是否开启定时调度器进行检测过期session 默认为true
@@ -144,26 +146,5 @@ public class ShiroSessionConfig {
 		// 取消url 后面的 JSESSIONID
 		sessionManager.setSessionIdUrlRewritingEnabled(false);
 		return sessionManager;
-	}
-
-	/**
-	 * 并发登录控制
-	 * 
-	 * @return
-	 */
-	@Bean
-	public KickoutSessionControlFilter kickoutSessionControlFilter(SessionManager sessionManager,CacheManager shiroCacheManager){
-	    KickoutSessionControlFilter kickoutSessionControlFilter = new KickoutSessionControlFilter();
-	    //用于根据会话ID，获取会话进行踢出操作的；
-	    kickoutSessionControlFilter.setSessionManager(sessionManager);
-	    //使用cacheManager获取相应的cache来缓存用户登录的会话；用于保存用户—会话之间的关系的；
-	    kickoutSessionControlFilter.setCacheManager(shiroCacheManager);
-	    //是否踢出后来登录的，默认是false；即后者登录的用户踢出前者登录的用户；
-	    kickoutSessionControlFilter.setKickoutAfter(false);
-	    //同一个用户最大的会话数，默认1；比如2的意思是同一个用户允许最多同时两个人登录；
-	    kickoutSessionControlFilter.setMaxSession(1);
-	    //被踢出后重定向到的地址；
-	    kickoutSessionControlFilter.setKickoutUrl("/login?kickout=1");
-	    return kickoutSessionControlFilter;
 	}
 }

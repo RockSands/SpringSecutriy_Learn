@@ -27,7 +27,8 @@ import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 
 import com.shiro.cache.ShiroCacheConfig;
 import com.shiro.cookie.ShiroCookieConfig;
-import com.shiro.session.KickoutSessionControlFilter;
+import com.shiro.filter.KickoutSessionControlFilter;
+import com.shiro.filter.URLPathMatchingFilter;
 import com.shiro.session.ShiroSessionConfig;
 
 import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
@@ -65,25 +66,26 @@ public class ShiroConfiguration {
 		resolver.setExceptionMappings(properties);
 		return resolver;
 	}
-	
-    /**
-     * 解决spring-boot Whitelabel Error Page
-     * @return
-     */
-    @Bean
-    public EmbeddedServletContainerCustomizer containerCustomizer() {
-        return new EmbeddedServletContainerCustomizer() {
-            @Override
-            public void customize(ConfigurableEmbeddedServletContainer container) {
-                ErrorPage error401Page = new ErrorPage(HttpStatus.UNAUTHORIZED, "/unauthorized.html");
-                ErrorPage error404Page = new ErrorPage(HttpStatus.NOT_FOUND, "/404.html");
-                ErrorPage error500Page = new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500.html");
-                container.addErrorPages(error401Page, error404Page, error500Page);
-            }
-        };
-    }
 
-    /**
+	/**
+	 * 解决spring-boot Whitelabel Error Page
+	 * 
+	 * @return
+	 */
+	@Bean
+	public EmbeddedServletContainerCustomizer containerCustomizer() {
+		return new EmbeddedServletContainerCustomizer() {
+			@Override
+			public void customize(ConfigurableEmbeddedServletContainer container) {
+				ErrorPage error401Page = new ErrorPage(HttpStatus.UNAUTHORIZED, "/unauthorized.html");
+				ErrorPage error404Page = new ErrorPage(HttpStatus.NOT_FOUND, "/404.html");
+				ErrorPage error500Page = new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500.html");
+				container.addErrorPages(error401Page, error404Page, error500Page);
+			}
+		};
+	}
+
+	/**
 	 * ShiroFilterFactoryBean 处理拦截资源文件问题。
 	 * 注意：初始化ShiroFilterFactoryBean的时候需要注入：SecurityManager
 	 * Web应用中,Shiro可控制的Web请求必须经过Shiro主过滤器的拦截
@@ -93,7 +95,7 @@ public class ShiroConfiguration {
 	 */
 	@Bean("shiroFilter")
 	public ShiroFilterFactoryBean shiroFilter(@Qualifier("securityManager") SecurityManager manager,
-			KickoutSessionControlFilter kickoutSessionControlFilter) {
+			KickoutSessionControlFilter kickoutSessionControlFilter, URLPathMatchingFilter uRLPathMatchingFilter) {
 		ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
 		// 必须设置 SecurityManager,Shiro的核心安全接口
 		shiroFilterFactoryBean.setSecurityManager(manager);
@@ -111,6 +113,7 @@ public class ShiroConfiguration {
 		LinkedHashMap<String, Filter> filtersMap = new LinkedHashMap<>();
 		// 限制同一帐号同时在线的个数
 		filtersMap.put("kickout", kickoutSessionControlFilter);
+		filtersMap.put("urlPath", uRLPathMatchingFilter);
 		shiroFilterFactoryBean.setFilters(filtersMap);
 
 		/*
@@ -126,17 +129,17 @@ public class ShiroConfiguration {
 		/*
 		 * 静态资源放行
 		 */
-		filterChainDefinitionMap.put("/images/**","anon");
-		filterChainDefinitionMap.put("/js/**","anon");
-		filterChainDefinitionMap.put("/css/**","anon");
-		filterChainDefinitionMap.put("/lib/**","anon");
-		filterChainDefinitionMap.put("/fonts/**","anon");
-		filterChainDefinitionMap.put("/icons/** ","anon");
-		
+		filterChainDefinitionMap.put("/images/**", "anon");
+		filterChainDefinitionMap.put("/js/**", "anon");
+		filterChainDefinitionMap.put("/css/**", "anon");
+		filterChainDefinitionMap.put("/lib/**", "anon");
+		filterChainDefinitionMap.put("/fonts/**", "anon");
+		filterChainDefinitionMap.put("/icons/** ", "anon");
+
 		// 配置不登录可以访问的资源， 表示资源都可以匿名访问
 		filterChainDefinitionMap.put("/login", "kickout,anon");
 		// 表单拦截验证,authc
-		filterChainDefinitionMap.put("/index", "authc");
+		filterChainDefinitionMap.put("/index", "anon,urlPath");
 		// 匿名拦截验证
 		filterChainDefinitionMap.put("/loginUser", "anon");
 		// 角色拦截验证,要求roles必须是admin
@@ -147,7 +150,8 @@ public class ShiroConfiguration {
 		// logout是shiro提供的过滤器
 		filterChainDefinitionMap.put("/logout", "logout");
 		// 用户拦截验证
-		filterChainDefinitionMap.put("/**", "kickout,user");
+		filterChainDefinitionMap.put("/**", "user");
+		// 用户拦截验证
 		shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
 		return shiroFilterFactoryBean;
@@ -256,8 +260,8 @@ public class ShiroConfiguration {
 	}
 
 	/**
-	 * 权限验证,开发cookie FormAuthenticationFilter 过滤器 过滤记住我
-	 * formAuthentication 权限过滤器, 所有的authc 即权限过滤请求,都会进行formAuthenticationFilter过滤
+	 * 权限验证,开发cookie FormAuthenticationFilter 过滤器 过滤记住我 formAuthentication 权限过滤器,
+	 * 所有的authc 即权限过滤请求,都会进行formAuthenticationFilter过滤
 	 * 
 	 * @return
 	 */
